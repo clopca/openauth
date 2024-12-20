@@ -1,7 +1,6 @@
 import { UnknownStateError } from "../error.js"
 import { Storage } from "../storage/storage.js"
 import { Adapter } from "./adapter.js"
-import { generateUnbiasedDigits, timingSafeCompare } from "../random.js"
 
 export interface PasswordHasher<T> {
   hash(password: string): Promise<T>
@@ -40,6 +39,9 @@ export type PasswordRegisterState =
       code: string
       email: string
       password: string
+      name: string
+      lastName: string
+      phone: string
     }
 
 export type PasswordRegisterError =
@@ -57,6 +59,15 @@ export type PasswordRegisterError =
     }
   | {
       type: "password_mismatch"
+    }
+  | {
+      type: "invalid_name"
+    }
+  | {
+      type: "invalid_lastName"
+    }
+  | {
+      type: "invalid_phone"
     }
 
 export type PasswordChangeState =
@@ -98,10 +109,35 @@ export type PasswordLoginError =
       type: "invalid_email"
     }
 
+// Add validation functions at the top of the file
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+function isValidPassword(password: string, minLength: number = 5): boolean {
+  // Requires minimum length and at least one number and one letter
+  return (
+    password.length >= minLength
+    // /[A-Za-z]/.test(password) &&
+    // /[0-9]/.test(password)
+  )
+}
+
+function isValidPhone(phone: string): boolean {
+  // Colombian phone format validation - 10 digits starting with 3
+  const phoneRegex = /^3\d{9}$/
+  return phoneRegex.test(phone)
+}
+
 export function PasswordAdapter(config: PasswordConfig) {
   const hasher = config.hasher ?? ScryptHasher()
   function generate() {
-    return generateUnbiasedDigits(6)
+    const buffer = crypto.getRandomValues(new Uint8Array(6))
+    const otp = Array.from(buffer)
+      .map((byte) => byte % 10)
+      .join("")
+    return otp
   }
   return {
     type: "password",
@@ -125,10 +161,16 @@ export function PasswordAdapter(config: PasswordConfig) {
         const password = fd.get("password")?.toString()
         if (!password || !hash || !(await hasher.verify(password, hash)))
           return error({ type: "invalid_password" })
+        const name = fd.get("name")?.toString()
+        const lastName = fd.get("lastName")?.toString()
+        const phone = fd.get("phone")?.toString()
         return ctx.success(
           c,
           {
-            email: email,
+            email,
+            name,
+            lastName,
+            phone,
           },
           {
             invalidate: async (subject) => {
@@ -153,6 +195,9 @@ export function PasswordAdapter(config: PasswordConfig) {
       routes.post("/register", async (c) => {
         const fd = await c.req.formData()
         const email = fd.get("email")?.toString()?.toLowerCase()
+        const name = fd.get("name")?.toString()
+        const lastName = fd.get("lastName")?.toString()
+        const phone = fd.get("phone")?.toString()
         const action = fd.get("action")?.toString()
         const adapter = await ctx.get<PasswordRegisterState>(c, "adapter")
 
@@ -167,11 +212,18 @@ export function PasswordAdapter(config: PasswordConfig) {
         if (action === "register" && adapter.type === "start") {
           const password = fd.get("password")?.toString()
           const repeat = fd.get("repeat")?.toString()
-          if (!email) return transition(adapter, { type: "invalid_email" })
-          if (!password)
+          if (!email || !isValidEmail(email))
+            return transition(adapter, { type: "invalid_email" })
+          if (!password || !isValidPassword(password, config.length ?? 8))
             return transition(adapter, { type: "invalid_password" })
           if (password !== repeat)
             return transition(adapter, { type: "password_mismatch" })
+          if (!name || name.length < 2)
+            return transition(adapter, { type: "invalid_name" })
+          if (!lastName || lastName.length < 2)
+            return transition(adapter, { type: "invalid_lastName" })
+          if (!phone || !isValidPhone(phone))
+            return transition(adapter, { type: "invalid_phone" })
           const existing = await Storage.get(ctx.storage, [
             "email",
             email,
@@ -185,12 +237,15 @@ export function PasswordAdapter(config: PasswordConfig) {
             code,
             password: await hasher.hash(password),
             email,
+            name,
+            lastName,
+            phone,
           })
         }
 
         if (action === "verify" && adapter.type === "code") {
           const code = fd.get("code")?.toString()
-          if (!code || !timingSafeCompare(code, adapter.code))
+          if (!code || code !== adapter.code)
             return transition(adapter, { type: "invalid_code" })
           const existing = await Storage.get(ctx.storage, [
             "email",
@@ -206,6 +261,9 @@ export function PasswordAdapter(config: PasswordConfig) {
           )
           return ctx.success(c, {
             email: adapter.email,
+            name: adapter.name,
+            lastName: adapter.lastName,
+            phone: adapter.phone,
           })
         }
 
@@ -258,7 +316,7 @@ export function PasswordAdapter(config: PasswordConfig) {
 
         if (action === "verify" && adapter.type === "code") {
           const code = fd.get("code")?.toString()
-          if (!code || !timingSafeCompare(code, adapter.code))
+          if (!code || code !== adapter.code)
             return transition(adapter, { type: "invalid_code" })
           return transition({
             type: "update",
@@ -277,7 +335,7 @@ export function PasswordAdapter(config: PasswordConfig) {
 
           const password = fd.get("password")?.toString()
           const repeat = fd.get("repeat")?.toString()
-          if (!password)
+          if (!password || !isValidPassword(password, config.length ?? 8))
             return transition(adapter, { type: "invalid_password" })
           if (password !== repeat)
             return transition(adapter, { type: "password_mismatch" })
@@ -300,7 +358,12 @@ export function PasswordAdapter(config: PasswordConfig) {
         return transition({ type: "start", redirect: adapter.redirect })
       })
     },
-  } satisfies Adapter<{ email: string }>
+  } satisfies Adapter<{
+    email: string
+    name?: string
+    lastName?: string
+    phone?: string
+  }>
 }
 
 import * as jose from "jose"

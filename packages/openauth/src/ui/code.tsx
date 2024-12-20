@@ -1,33 +1,33 @@
 /** @jsxImportSource hono/jsx */
 
-import { CodeAdapterOptions } from "../adapter/code.js"
-import { UnknownStateError } from "../error.js"
-import { Layout } from "./base.js"
-import { FormAlert } from "./form.js"
+import { CodeAdapterOptions } from "../adapter/code.js";
+import { UnknownStateError } from "../error.js";
+import { Layout } from "./base.js";
+import { FormAlert } from "./form.js";
 
 const DEFAULT_COPY = {
   email_placeholder: "Email",
-  email_invalid: "Email address is not valid",
-  button_continue: "Continue",
-  code_info: "We'll send a pin code to your email",
-  code_placeholder: "Code",
-  code_invalid: "Invalid code",
-  code_sent: "Code sent to ",
-  code_resent: "Code resent to ",
-  code_didnt_get: "Didn't get code?",
-  code_resend: "Resend",
-}
+  email_invalid: "El email no es válido",
+  button_continue: "Continuar",
+  code_info: "Te enviaremos un código a tu email",
+  code_placeholder: "Código",
+  code_invalid: "Código incorrecto",
+  code_sent: "Código enviado a ",
+  code_resent: "Código reenviado a ",
+  code_didnt_get: "¿No recibiste el código?",
+  code_resend: "Reenviar",
+};
 
-export type CodeUICopy = typeof DEFAULT_COPY
+export type CodeUICopy = typeof DEFAULT_COPY;
 
 export function CodeUI(props: {
-  sendCode: (claims: Record<string, string>, code: string) => Promise<void>
-  copy?: Partial<CodeUICopy>
+  sendCode: (claims: Record<string, string>, code: string) => Promise<void>;
+  copy?: Partial<CodeUICopy>;
 }) {
   const copy = {
     ...DEFAULT_COPY,
     ...props.copy,
-  }
+  };
 
   return {
     sendCode: props.sendCode,
@@ -53,12 +53,12 @@ export function CodeUI(props: {
             </form>
             <p data-component="form-footer">{copy.code_info}</p>
           </Layout>
-        )
+        );
         return new Response(jsx.toString(), {
           headers: {
-            "Content-Type": "text/html",
+            "Content-Type": "text/html; charset=utf-8",
           },
-        })
+        });
       }
 
       if (state.type === "code") {
@@ -109,15 +109,15 @@ export function CodeUI(props: {
               </div>
             </form>
           </Layout>
-        )
+        );
         return new Response(jsx.toString(), {
           headers: {
-            "Content-Type": "text/html",
+            "Content-Type": "text/html; charset=utf-8",
           },
-        })
+        });
       }
 
-      throw new UnknownStateError()
+      throw new UnknownStateError();
     },
-  } satisfies CodeAdapterOptions
+  } satisfies CodeAdapterOptions;
 }

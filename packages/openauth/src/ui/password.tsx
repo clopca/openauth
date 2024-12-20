@@ -5,59 +5,66 @@ import {
   PasswordConfig,
   PasswordLoginError,
   PasswordRegisterError,
-} from "../adapter/password.js"
-import { Layout } from "./base.js"
-import "./form.js"
-import { FormAlert } from "./form.js"
+} from "../adapter/password.js";
+import { Layout } from "./base.js";
+import "./form.js";
+import { FormAlert } from "./form.js";
 
 const DEFAULT_COPY = {
-  error_email_taken: "There is already an account with this email.",
-  error_invalid_code: "Code is incorrect.",
-  error_invalid_email: "Email is not valid.",
-  error_invalid_password: "Password is incorrect.",
-  error_password_mismatch: "Passwords do not match.",
-  register_title: "Welcome to the app",
-  register_description: "Sign in with your email",
-  login_title: "Welcome to the app",
-  login_description: "Sign in with your email",
-  register: "Register",
-  register_prompt: "Don't have an account?",
-  login_prompt: "Already have an account?",
-  login: "Login",
-  change_prompt: "Forgot password?",
-  code_resend: "Resend code",
-  code_return: "Back to",
-  logo: "A",
+  error_email_taken: "Ya hay una cuenta con este email.",
+  error_invalid_code: "El código es incorrecto.",
+  error_invalid_email: "El email no es válido.",
+  error_invalid_password: "La contraseña es incorrecta.",
+  error_password_mismatch: "Las contraseñas no coinciden.",
+  error_invalid_name: "El nombre no es válido.",
+  error_invalid_lastName: "El apellido no es válido.",
+  error_invalid_phone: "El número de teléfono no es válido.",
+  register_title: "Bienvenido a Crediteame",
+  register_description: "Inicia sesión con tu email",
+  login_title: "Bienvenido a Crediteame",
+  login_description: "Inicia sesión con tu email",
+  register: "Registrarse",
+  register_prompt: "¿No tienes cuenta?",
+  login_prompt: "¿Ya tienes cuenta?",
+  login: "Iniciar sesión",
+  change_prompt: "¿Olvidaste tu contraseña?",
+  code_resend: "Reenviar código",
+  code_return: "Volver a iniciar sesión",
+  logo: "Crediteame",
   input_email: "Email",
-  input_password: "Password",
-  input_code: "Code",
-  input_repeat: "Repeat password",
-  button_continue: "Continue",
+  input_password: "Contraseña",
+  input_name: "Nombre",
+  input_lastName: "Apellido",
+  input_phone: "Número de teléfono",
+  input_code: "Código",
+  input_repeat: "Repite la contraseña",
+  button_continue: "Continuar",
 } satisfies {
   [key in `error_${
     | PasswordLoginError["type"]
     | PasswordRegisterError["type"]
-    | PasswordChangeError["type"]}`]: string
-} & Record<string, string>
+    | PasswordChangeError["type"]}`]: string;
+} & Record<string, string>;
 
-export type PasswordUICopy = typeof DEFAULT_COPY
+export type PasswordUICopy = typeof DEFAULT_COPY;
 
 export interface PasswordUIOptions {
-  sendCode: PasswordConfig["sendCode"]
-  copy?: Partial<PasswordUICopy>
+  sendCode: PasswordConfig["sendCode"];
+  copy?: Partial<PasswordUICopy>;
 }
 
 export function PasswordUI(input: PasswordUIOptions) {
   const copy = {
     ...DEFAULT_COPY,
     ...input.copy,
-  }
+  };
   return {
     sendCode: input.sendCode,
     login: async (_req, form, error): Promise<Response> => {
       const jsx = (
         <Layout>
           <form data-component="form" method="post">
+            <meta charSet="UTF-8" />
             <FormAlert message={error?.type && copy?.[`error_${error.type}`]} />
             <input
               data-component="input"
@@ -91,24 +98,28 @@ export function PasswordUI(input: PasswordUIOptions) {
             </div>
           </form>
         </Layout>
-      )
+      );
       return new Response(jsx.toString(), {
         status: error ? 401 : 200,
         headers: {
-          "Content-Type": "text/html",
+          "Content-Type": "text/html; charset=utf-8",
         },
-      })
+      });
     },
     register: async (_req, state, form, error): Promise<Response> => {
       const emailError = ["invalid_email", "email_taken"].includes(
-        error?.type || "",
-      )
+        error?.type || ""
+      );
       const passwordError = ["invalid_password", "password_mismatch"].includes(
-        error?.type || "",
-      )
+        error?.type || ""
+      );
+      const nameError = ["invalid_name"].includes(error?.type || "");
+      const lastNameError = ["invalid_lastname"].includes(error?.type || "");
+      const phoneError = ["invalid_phone"].includes(error?.type || "");
       const jsx = (
         <Layout>
           <form data-component="form" method="post">
+            <meta charSet="UTF-8" />
             <FormAlert message={error?.type && copy?.[`error_${error.type}`]} />
             {state.type === "start" && (
               <>
@@ -143,6 +154,35 @@ export function PasswordUI(input: PasswordUIOptions) {
                   placeholder={copy.input_repeat}
                   autoComplete="new-password"
                 />
+                <input
+                  data-component="input"
+                  autofocus={nameError}
+                  type="text"
+                  name="name"
+                  required
+                  placeholder={copy.input_name}
+                  value={!nameError ? form?.get("name")?.toString() : ""}
+                />
+                <input
+                  data-component="input"
+                  autofocus={lastNameError}
+                  type="text"
+                  name="lastName"
+                  required
+                  placeholder={copy.input_lastName}
+                  value={
+                    !lastNameError ? form?.get("lastName")?.toString() : ""
+                  }
+                />
+                <input
+                  data-component="input"
+                  autofocus={phoneError}
+                  type="tel"
+                  name="phone"
+                  required
+                  placeholder={copy.input_phone}
+                  value={!phoneError ? form?.get("phone")?.toString() : ""}
+                />
                 <button data-component="button">{copy.button_continue}</button>
                 <div data-component="form-footer">
                   <span>
@@ -173,20 +213,21 @@ export function PasswordUI(input: PasswordUIOptions) {
             )}
           </form>
         </Layout>
-      ) as string
+      ) as string;
       return new Response(jsx.toString(), {
         headers: {
-          "Content-Type": "text/html",
+          "Content-Type": "text/html; charset=utf-8",
         },
-      })
+      });
     },
     change: async (_req, state, form, error): Promise<Response> => {
       const passwordError = ["invalid_password", "password_mismatch"].includes(
-        error?.type || "",
-      )
+        error?.type || ""
+      );
       const jsx = (
         <Layout>
           <form data-component="form" method="post" replace>
+            <meta charSet="UTF-8" />
             <FormAlert message={error?.type && copy?.[`error_${error.type}`]} />
             {state.type === "start" && (
               <>
@@ -265,13 +306,13 @@ export function PasswordUI(input: PasswordUIOptions) {
             </form>
           )}
         </Layout>
-      )
+      );
       return new Response(jsx.toString(), {
         status: error ? 400 : 200,
         headers: {
-          "Content-Type": "text/html",
+          "Content-Type": "text/html; charset=utf-8",
         },
-      })
+      });
     },
-  } satisfies PasswordConfig
+  } satisfies PasswordConfig;
 }
