@@ -1,5 +1,5 @@
 {
-  "name": "@openauthjs/openauth",
+  "name": "@clopca/openauth",
   "version": "0.2.5",
   "type": "module",
   "scripts": {

@@ -1,4 +1,4 @@
-# @openauthjs/openauth
+# @clopca/openauth
 
 ## 0.2.5
 
