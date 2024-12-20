@@ -1,6 +1,6 @@
-import { authorizer } from "@openauthjs/openauth"
-import { MemoryStorage } from "@openauthjs/openauth/storage/memory"
-import { CodeAdapter } from "@openauthjs/openauth/adapter/code"
+import { authorizer } from "@clopca/openauth"
+import { MemoryStorage } from "@clopca/openauth/storage/memory"
+import { CodeAdapter } from "@clopca/openauth/adapter/code"
 import { subjects } from "../../../subjects.js"
 
 async function getUser(email: string) {

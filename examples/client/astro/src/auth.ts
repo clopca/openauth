@@ -1,4 +1,4 @@
-import { createClient } from "@openauthjs/openauth/client"
+import { createClient } from "@clopca/openauth/client"
 import type { APIContext } from "astro"
 export { subjects } from "../../../subjects"
 

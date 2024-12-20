@@ -1,5 +1,5 @@
 {
-  "name": "openauthjs",
+  "name": "@clopca/openauthjs",
   "module": "index.ts",
   "type": "module",
   "workspaces": [
@@ -8,7 +8,7 @@
     "examples/client/*"
   ],
   "scripts": {
-    "release": "bun run --filter=\"@openauthjs/openauth\" build && changeset publish"
+    "release": "bun run --filter=\"@clopca/openauth\" build && changeset publish"
   },
   "devDependencies": {
     "@types/bun": "latest"

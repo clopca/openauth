@@ -1,10 +1,10 @@
-import { authorizer } from "@openauthjs/openauth"
+import { authorizer } from "@clopca/openauth"
 import { handle } from "hono/aws-lambda"
-import { DynamoStorage } from "@openauthjs/openauth/storage/dynamo"
+import { DynamoStorage } from "@clopca/openauth/storage/dynamo"
 import { subjects } from "../../subjects.js"
 import { Resource } from "sst"
-import { PasswordAdapter } from "@openauthjs/openauth/adapter/password"
-import { PasswordUI } from "@openauthjs/openauth/ui/password"
+import { PasswordAdapter } from "@clopca/openauth/adapter/password"
+import { PasswordUI } from "@clopca/openauth/ui/password"
 
 async function getUser(email: string) {
   // Get user from database

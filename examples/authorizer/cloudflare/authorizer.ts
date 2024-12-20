@@ -1,12 +1,12 @@
-import { authorizer } from "@openauthjs/openauth"
-import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare"
+import { authorizer } from "@clopca/openauth"
+import { CloudflareStorage } from "@clopca/openauth/storage/cloudflare"
 import {
   type ExecutionContext,
   type KVNamespace,
 } from "@cloudflare/workers-types"
 import { subjects } from "../../subjects.js"
-import { PasswordAdapter } from "@openauthjs/openauth/adapter/password"
-import { PasswordUI } from "@openauthjs/openauth/ui/password"
+import { PasswordAdapter } from "@clopca/openauth/adapter/password"
+import { PasswordUI } from "@clopca/openauth/ui/password"
 
 interface Env {
   CloudflareAuthKV: KVNamespace

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react"
-import { createClient } from "@openauthjs/openauth/client"
+import { createClient } from "@clopca/openauth/client"
 
 const client = createClient({
   clientID: "react",
